@@ -1,0 +1,77 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+enum MemberRole {
+  ADMIN
+  MODERATOR
+  GUEST
+}
+
+enum ChannelType {
+  TEXT
+  AUDIO
+  VIDEO
+}
+
+model Profile {
+  id       String @id @default(auto()) @map("_id") @db.ObjectId
+  userId   String @unique
+  name     String
+  imageUrl String @db.String
+  email    String @db.String
+
+  server   Server[]
+  menbers  Member[]
+  channels Channel[]
+
+  createAt  DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Server {
+  id         String @id @default(auto()) @map("_id") @db.ObjectId
+  name       String
+  imageUrl   String @db.String
+  inviteCode String @db.String
+
+  profileId String  @db.ObjectId
+  profile   Profile @relation(fields: [profileId], references: [id])
+
+  members  Member[]
+  channels Channel[]
+
+  createAt  DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Member {
+  id   String     @id @default(auto()) @map("_id") @db.ObjectId
+  role MemberRole @default(GUEST)
+
+  profileId String  @db.ObjectId
+  profile   Profile @relation(fields: [profileId], references: [id])
+
+  serverId String @db.ObjectId
+  server   Server @relation(fields: [serverId], references: [id])
+
+  createAt  DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Channel {
+  id   String      @id @default(auto()) @map("_id") @db.ObjectId
+  name String
+  type ChannelType @default(TEXT)
+
+  profileId String  @db.ObjectId
+  profile   Profile @relation(fields: [profileId], references: [id])
+
+  serverId String @db.ObjectId
+  server   Server @relation(fields: [serverId], references: [id])
+}
